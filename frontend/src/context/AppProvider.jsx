@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
-import { io } from 'socket.io-client';
+import socket from '../../socket';
 import { AppContext } from './AppContext';
 
 export const AppProvider = ({ children }) => {
@@ -10,7 +10,6 @@ export const AppProvider = ({ children }) => {
     const stored = localStorage.getItem('user');
     return stored ? JSON.parse(stored) : null;
   });
-  const [socket, setSocket] = useState(null);
   const base = 'http://localhost:5000';
 
   useEffect(() => {
@@ -18,14 +17,10 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated && !socket) {
-      const newSocket = io('http://localhost:5000'); // Updated URL to match backend integration
-      setSocket(newSocket);
-      return () => newSocket.close();
-    }
-    if (!isAuthenticated && socket) {
-      socket.close();
-      setSocket(null);
+    if (isAuthenticated) {
+      if (!socket.connected) socket.connect();
+    } else {
+      if (socket.connected) socket.disconnect();
     }
   }, [isAuthenticated]);
 

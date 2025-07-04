@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from './context/AppContext';
 
@@ -6,8 +6,38 @@ const UserPage = () => {
   const [users, setUsers] = useState([]);
   const [error, setError] = useState('');
   const [sharedWith, setSharedWith] = useState([]);
-  const { user, base } = useContext(AppContext);
+  const { user, base, socket } = useContext(AppContext);
   const navigate = useNavigate();
+  const geoWatchId = useRef(null);
+
+  // Helper: is sharing with anyone?
+  const isSharing = sharedWith.length > 0;
+
+  // Start/stop geolocation watcher based on sharing state
+  useEffect(() => {
+    if (isSharing && socket && user) {
+      geoWatchId.current = navigator.geolocation.watchPosition(
+        (pos) => {
+          socket.emit('driverLocationUpdate', {
+            userId: user.id,
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          });
+        },
+        (err) => console.error('Geolocation error:', err),
+        { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+      );
+    } else if (geoWatchId.current !== null) {
+      navigator.geolocation.clearWatch(geoWatchId.current);
+      geoWatchId.current = null;
+    }
+    return () => {
+      if (geoWatchId.current !== null) {
+        navigator.geolocation.clearWatch(geoWatchId.current);
+        geoWatchId.current = null;
+      }
+    };
+  }, [isSharing, socket, user]);
 
   useEffect(() => {
     const fetchUsers = async () => {
