@@ -107,7 +107,8 @@ const UserPage = () => {
           <div key={u._id} style={{ border: '1px solid #ccc', borderRadius: 8, padding: 16, width: 250 }}>
             <div style={{ fontWeight: 'bold', fontSize: 18 }}>{u.name}</div>
             <div style={{ color: '#555', marginBottom: 8 }}>{u.email}</div>
-            {u.canAccess && u.canAccess.map(String).includes(String(user.id)) && (
+            {console.log(u.canAccess)}
+            {u.sharedWith && u.sharedWith.map(String).includes(String(user.id)) && (
               <button onClick={() => navigate(`/${u._id}`)} style={{ padding: 8, width: '48%', marginRight: '4%' }}>See Location</button>
             )}
             <button
