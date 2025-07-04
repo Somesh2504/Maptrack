@@ -8,7 +8,7 @@ const RegisterPage = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const { login } = useContext(AppContext);
+  const { login, base } = useContext(AppContext);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -19,7 +19,7 @@ const RegisterPage = () => {
       return;
     }
     try {
-      const res = await fetch('http://localhost:5000/api/users/register', {
+      const res = await fetch(`${base}/api/users/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password })

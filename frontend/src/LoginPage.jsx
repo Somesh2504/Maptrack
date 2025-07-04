@@ -7,7 +7,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const { login } = useContext(AppContext);
+  const { login, base } = useContext(AppContext);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -18,7 +18,7 @@ const LoginPage = () => {
       return;
     }
     try {
-      const res = await fetch('http://localhost:5000/api/users/login', {
+      const res = await fetch(`${base}/api/users/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })

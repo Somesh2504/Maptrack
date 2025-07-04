@@ -6,13 +6,13 @@ const UserPage = () => {
   const [users, setUsers] = useState([]);
   const [error, setError] = useState('');
   const [sharedWith, setSharedWith] = useState([]);
-  const { user } = useContext(AppContext);
+  const { user, base } = useContext(AppContext);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/users/all?currentUserId=${user?.id}`);
+        const res = await fetch(`${base}/api/users/all?currentUserId=${user?.id}`);
         const data = await res.json();
         if (!res.ok) {
           setError(data.message || 'Failed to fetch users');
@@ -29,7 +29,7 @@ const UserPage = () => {
   const handleShareLocation = async (toUserId) => {
     setError('');
     try {
-      const res = await fetch('http://localhost:5000/api/users/share-location', {
+      const res = await fetch(`${base}/api/users/share-location`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -50,7 +50,7 @@ const UserPage = () => {
   const handleStopSharing = async (toUserId) => {
     setError('');
     try {
-      const res = await fetch('http://localhost:5000/api/users/stop-sharing-location', {
+      const res = await fetch(`${base}/api/users/stop-sharing-location`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

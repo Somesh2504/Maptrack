@@ -11,6 +11,7 @@ export const AppProvider = ({ children }) => {
     return stored ? JSON.parse(stored) : null;
   });
   const [socket, setSocket] = useState(null);
+  const base = 'http://localhost:5000';
 
   useEffect(() => {
     setIsAuthenticated(!!Cookies.get('authToken'));
@@ -18,7 +19,7 @@ export const AppProvider = ({ children }) => {
 
   useEffect(() => {
     if (isAuthenticated && !socket) {
-      const newSocket = io('http://localhost:5001'); // Update URL as needed
+      const newSocket = io('http://localhost:5000'); // Updated URL to match backend integration
       setSocket(newSocket);
       return () => newSocket.close();
     }
@@ -44,7 +45,7 @@ export const AppProvider = ({ children }) => {
   };
 
   return (
-    <AppContext.Provider value={{ isAuthenticated, user, login, logout, socket }}>
+    <AppContext.Provider value={{ isAuthenticated, user, login, logout, socket, base }}>
       {children}
     </AppContext.Provider>
   );
