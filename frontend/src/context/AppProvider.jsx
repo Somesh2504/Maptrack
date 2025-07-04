@@ -10,7 +10,7 @@ export const AppProvider = ({ children }) => {
     const stored = localStorage.getItem('user');
     return stored ? JSON.parse(stored) : null;
   });
-  const base = 'http://localhost:5000';
+  const base = 'https://maptrack-959v.onrender.com';
 
   useEffect(() => {
     setIsAuthenticated(!!Cookies.get('authToken'));
