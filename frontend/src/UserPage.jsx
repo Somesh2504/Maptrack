@@ -5,23 +5,27 @@ import { AppContext } from './context/AppContext';
 const UserPage = () => {
   const [users, setUsers] = useState([]);
   const [error, setError] = useState('');
-  const [sharedWith, setSharedWith] = useState([]);
+  const [sharedWithUsers, setSharedWithUsers] = useState([]); // user IDs we are sharing with
   const { user, base, socket } = useContext(AppContext);
   const navigate = useNavigate();
   const geoWatchId = useRef(null);
 
-  // Helper: is sharing with anyone?
-  const isSharing = sharedWith.length > 0;
+  // Helper: are we sharing with at least one user?
+  const isSharing = sharedWithUsers.length > 0;
 
   // Start/stop geolocation watcher based on sharing state
   useEffect(() => {
     if (isSharing && socket && user) {
       geoWatchId.current = navigator.geolocation.watchPosition(
         (pos) => {
-          socket.emit('driverLocationUpdate', {
-            userId: user.id,
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
+          // Emit location for all users we are sharing with
+          sharedWithUsers.forEach((toUserId) => {
+            socket.emit('driverLocationUpdate', {
+              userId: user.id,
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+              toUserId, // Optionally include for backend filtering
+            });
           });
         },
         (err) => console.error('Geolocation error:', err),
@@ -37,7 +41,7 @@ const UserPage = () => {
         geoWatchId.current = null;
       }
     };
-  }, [isSharing, socket, user]);
+  }, [isSharing, socket, user, sharedWithUsers]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -56,6 +60,13 @@ const UserPage = () => {
     if (user?.id) fetchUsers();
   }, [user]);
 
+  // Update sharedWithUsers state based on users data
+  useEffect(() => {
+    // Find all users where our user.id is in their canAccess array
+    const sharingWith = users.filter(u => u.canAccess && u.canAccess.map(String).includes(String(user.id))).map(u => u._id);
+    setSharedWithUsers(sharingWith);
+  }, [users, user]);
+
   const handleShareLocation = async (toUserId) => {
     setError('');
     try {
@@ -70,7 +81,9 @@ const UserPage = () => {
       if (!res.ok) {
         setError(data.message || 'Failed to share location');
       } else {
-        setSharedWith(prev => [...prev, toUserId]);
+        setSharedWithUsers(prev => [...prev, toUserId]);
+        // Optionally, refetch users to update UI
+        // fetchUsers();
       }
     } catch {
       setError('Network error. Please try again.');
@@ -91,13 +104,15 @@ const UserPage = () => {
       if (!res.ok) {
         setError(data.message || 'Failed to stop sharing location');
       } else {
-        setSharedWith(prev => prev.filter(id => id !== toUserId));
+        setSharedWithUsers(prev => prev.filter(id => id !== toUserId));
+        // Optionally, refetch users to update UI
+        // fetchUsers();
       }
     } catch {
       setError('Network error. Please try again.');
     }
   };
-
+  
   return (
     <div style={{ maxWidth: 800, margin: '2rem auto' }}>
       <h2>Other Users</h2>
@@ -107,20 +122,26 @@ const UserPage = () => {
           <div key={u._id} style={{ border: '1px solid #ccc', borderRadius: 8, padding: 16, width: 250 }}>
             <div style={{ fontWeight: 'bold', fontSize: 18 }}>{u.name}</div>
             <div style={{ color: '#555', marginBottom: 8 }}>{u.email}</div>
-            {console.log(u.canAccess)}
+            {/* See Location button if current user is in u.sharedWith */}
             {u.sharedWith && u.sharedWith.map(String).includes(String(user.id)) && (
-              <button onClick={() => navigate(`/${u._id}`)} style={{ padding: 8, width: '48%', marginRight: '4%' }}>See Location</button>
+              <button onClick={() => navigate(`/${u._id}`)} style={{ padding: 8, width: '100%', marginBottom: 8 }}>See Location</button>
             )}
-            <button
-              style={{ padding: 8, width: '48%' }}
-              onClick={() =>
-                sharedWith.includes(u._id)
-                  ? handleStopSharing(u._id)
-                  : handleShareLocation(u._id)
-              }
-            >
-              {sharedWith.includes(u._id) ? 'Stop Sharing' : 'Share Location'}
-            </button>
+            {/* Stop Sharing if current user is in u.canAccess, else Share Location */}
+            {u.canAccess && u.canAccess.map(String).includes(String(user.id)) ? (
+              <button
+                style={{ padding: 8, width: '100%' }}
+                onClick={() => handleStopSharing(u._id)}
+              >
+                Stop Sharing
+              </button>
+            ) : (
+              <button
+                style={{ padding: 8, width: '100%' }}
+                onClick={() => handleShareLocation(u._id)}
+              >
+                Share Location
+              </button>
+            )}
           </div>
         ))}
       </div>
