@@ -71,10 +71,24 @@ const UserPage = () => {
 
   // Update sharedWithUsers state based on users data
   useEffect(() => {
-    // Find all users where our user.id is in their canAccess array
-    const sharingWith = users.filter(u => u.canAccess && u.canAccess.map(String).includes(String(user.id))).map(u => u._id);
-    setSharedWithUsers(sharingWith);
-  }, [users, user]);
+    // We need to fetch the current user's data to see who they're sharing with
+    const fetchCurrentUser = async () => {
+      try {
+        const res = await fetch(`${base}/api/users/current?userId=${user?.id}`);
+        const currentUserData = await res.json();
+        if (res.ok && currentUserData.sharedWith) {
+          console.log('UserPage: Current user sharedWith:', currentUserData.sharedWith);
+          setSharedWithUsers(currentUserData.sharedWith);
+        }
+      } catch (error) {
+        console.error('Error fetching current user data:', error);
+      }
+    };
+    
+    if (user?.id) {
+      fetchCurrentUser();
+    }
+  }, [user, base]);
 
   const handleShareLocation = async (toUserId) => {
     setError('');
