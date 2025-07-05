@@ -17,12 +17,36 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    console.log('AppProvider: isAuthenticated:', isAuthenticated, 'socket connected:', socket.connected);
     if (isAuthenticated) {
-      if (!socket.connected) socket.connect();
+      if (!socket.connected) {
+        console.log('AppProvider: Connecting socket...');
+        socket.connect();
+      }
     } else {
-      if (socket.connected) socket.disconnect();
+      if (socket.connected) {
+        console.log('AppProvider: Disconnecting socket...');
+        socket.disconnect();
+      }
     }
   }, [isAuthenticated]);
+
+  // Add socket event listeners for debugging
+  useEffect(() => {
+    const handleConnect = () => console.log('AppProvider: Socket connected!');
+    const handleDisconnect = () => console.log('AppProvider: Socket disconnected!');
+    const handleError = (error) => console.error('AppProvider: Socket error:', error);
+
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+    socket.on('error', handleError);
+
+    return () => {
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+      socket.off('error', handleError);
+    };
+  }, []);
 
   const login = (token, userInfo = null) => {
     Cookies.set('authToken', token, { expires: 7 });

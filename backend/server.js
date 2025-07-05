@@ -34,8 +34,10 @@ io.on('connection', (socket) => {
   console.log('🟢 A user connected:', socket.id);
   socket.on('driverLocationUpdate', (data) => {
     try {
-      console.log('📍 Driver location:', data);
+      console.log('📍 Driver location received:', data);
+      console.log('📍 Broadcasting to all clients...');
       io.emit('updateDriverLocation', data);
+      console.log('📍 Location broadcasted successfully');
     } catch (err) {
       console.error('Error handling driverLocationUpdate:', err);
     }

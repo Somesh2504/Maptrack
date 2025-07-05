@@ -15,23 +15,31 @@ const UserPage = () => {
 
   // Start/stop geolocation watcher based on sharing state
   useEffect(() => {
+    console.log('UserPage: isSharing:', isSharing, 'socket connected:', socket?.connected, 'user:', user?.id);
+    console.log('UserPage: sharedWithUsers:', sharedWithUsers);
+    
     if (isSharing && socket && user) {
+      console.log('UserPage: Starting location sharing...');
       geoWatchId.current = navigator.geolocation.watchPosition(
         (pos) => {
+          console.log('UserPage: Got position:', pos.coords);
           // Emit location for all users we are sharing with
           sharedWithUsers.forEach((toUserId) => {
-            socket.emit('driverLocationUpdate', {
+            const locationData = {
               userId: user.id,
               lat: pos.coords.latitude,
               lng: pos.coords.longitude,
               toUserId, // Optionally include for backend filtering
-            });
+            };
+            console.log('UserPage: Emitting location:', locationData);
+            socket.emit('driverLocationUpdate', locationData);
           });
         },
         (err) => console.error('Geolocation error:', err),
         { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
       );
     } else if (geoWatchId.current !== null) {
+      console.log('UserPage: Stopping location sharing...');
       navigator.geolocation.clearWatch(geoWatchId.current);
       geoWatchId.current = null;
     }

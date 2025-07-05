@@ -11,13 +11,25 @@ const Tracker = () => {
   const [location, setLocation] = useState(null);
 
   useEffect(() => {
-    if (!socket) return;
+    console.log('Tracker: Socket connected?', socket?.connected);
+    console.log('Tracker: Tracking user ID:', trackedUserId);
+    
+    if (!socket) {
+      console.log('Tracker: No socket available');
+      return;
+    }
+    
     const handler = (data) => {
+      console.log('Tracker: Received location update:', data);
       // Accept both driverId and userId for flexibility
       if (data.userId === trackedUserId || data.driverId === trackedUserId) {
+        console.log('Tracker: Setting location for user:', trackedUserId);
         setLocation({ lat: data.lat, lng: data.lng });
+      } else {
+        console.log('Tracker: Location update not for this user. Expected:', trackedUserId, 'Got:', data.userId || data.driverId);
       }
     };
+    
     socket.on('updateDriverLocation', handler);
     return () => socket.off('updateDriverLocation', handler);
   }, [socket, trackedUserId]);
