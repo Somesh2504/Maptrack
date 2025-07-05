@@ -58,7 +58,7 @@ export const getAllUsersExceptCurrent = async (req, res) => {
     if (!currentUserId) return res.status(400).json({ message: 'Current user ID required' });
     const users = await User.find(
       { _id: { $ne: currentUserId } },
-      'name email canAccess'
+      'name email canAccess sharedWith'
     );
     res.status(200).json(users);
   } catch (err) {

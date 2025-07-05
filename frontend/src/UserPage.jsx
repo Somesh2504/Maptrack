@@ -51,6 +51,7 @@ const UserPage = () => {
         if (!res.ok) {
           setError(data.message || 'Failed to fetch users');
         } else {
+          console.log('Fetched users:', data);
           setUsers(data);
         }
       } catch {
@@ -82,8 +83,19 @@ const UserPage = () => {
         setError(data.message || 'Failed to share location');
       } else {
         setSharedWithUsers(prev => [...prev, toUserId]);
-        // Optionally, refetch users to update UI
-        // fetchUsers();
+        // Refetch users to update UI
+        const fetchUsers = async () => {
+          try {
+            const res = await fetch(`${base}/api/users/all?currentUserId=${user?.id}`);
+            const data = await res.json();
+            if (res.ok) {
+              setUsers(data);
+            }
+          } catch {
+            // Silently fail for refetch
+          }
+        };
+        fetchUsers();
       }
     } catch {
       setError('Network error. Please try again.');
@@ -105,14 +117,25 @@ const UserPage = () => {
         setError(data.message || 'Failed to stop sharing location');
       } else {
         setSharedWithUsers(prev => prev.filter(id => id !== toUserId));
-        // Optionally, refetch users to update UI
-        // fetchUsers();
+        // Refetch users to update UI
+        const fetchUsers = async () => {
+          try {
+            const res = await fetch(`${base}/api/users/all?currentUserId=${user?.id}`);
+            const data = await res.json();
+            if (res.ok) {
+              setUsers(data);
+            }
+          } catch {
+            // Silently fail for refetch
+          }
+        };
+        fetchUsers();
       }
     } catch {
       setError('Network error. Please try again.');
     }
   };
-  
+  console.log(users,"*********",user)
   return (
     <div style={{ maxWidth: 800, margin: '2rem auto' }}>
       <h2>Other Users</h2>
@@ -123,6 +146,7 @@ const UserPage = () => {
             <div style={{ fontWeight: 'bold', fontSize: 18 }}>{u.name}</div>
             <div style={{ color: '#555', marginBottom: 8 }}>{u.email}</div>
             {/* See Location button if current user is in u.sharedWith */}
+           { console.log(u.sharedWith,"*********",user.id)}
             {u.sharedWith && u.sharedWith.map(String).includes(String(user.id)) && (
               <button onClick={() => navigate(`/${u._id}`)} style={{ padding: 8, width: '100%', marginBottom: 8 }}>See Location</button>
             )}
